@@ -1,0 +1,805 @@
+<script type="text/javascript">
+        var gk_isXlsx = false;
+        var gk_xlsxFileLookup = {};
+        var gk_fileData = {};
+        function filledCell(cell) {
+          return cell !== '' && cell != null;
+        }
+        function loadFileData(filename) {
+        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+            try {
+                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                var firstSheetName = workbook.SheetNames[0];
+                var worksheet = workbook.Sheets[firstSheetName];
+
+                // Convert sheet to JSON to filter blank rows
+                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                // Filter out blank rows (rows where all cells are empty, null, or undefined)
+                var filteredData = jsonData.filter(row => row.some(filledCell));
+
+                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
+                var headerRowIndex = filteredData.findIndex((row, index) =>
+                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                );
+                // Fallback
+                if (headerRowIndex === -1 || headerRowIndex > 25) {
+                  headerRowIndex = 0;
+                }
+
+                // Convert filtered JSON back to CSV
+                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
+                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+                return csv;
+            } catch (e) {
+                console.error(e);
+                return "";
+            }
+        }
+        return gk_fileData[filename] || "";
+        }
+        </script><!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AutoAware - Connected Vehicle Technology & V2X Solutions</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#230660',
+                        secondary: '#4A2A91',
+                        accent: '#B94C4E',
+                        dark: '#1a202c',
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                }
+            }
+        }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        
+        html {
+            scroll-behavior: smooth;
+            margin: 0; /* Reset default margin for html */
+            padding: 0; /* Reset default padding for html */
+        }
+        
+        body {
+            margin: 0; /* Reset default margin */
+            padding: 0; /* Reset default padding */
+        }
+        
+        nav.fixed {
+            top: 0; /* Explicitly set nav to top of viewport */
+            left: 0;
+            right: 0;
+        }
+        
+        .gradient-bg {
+            background: linear-gradient(135deg, #230660 0%, #4A2A91 100%);
+        }
+        
+        .card-hover {
+            transition: all 0.3s ease;
+        }
+        
+        .card-hover:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+        
+        .animate-float {
+            animation: float 6s ease-in-out infinite;
+        }
+        
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-20px); }
+            100% { transform: translateY(0px); }
+        }
+        
+        .nav-link {
+            position: relative;
+        }
+        
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            width: 0;
+            height: 2px;
+            bottom: -4px;
+            left: 0;
+            background-color: #B94C4E;
+            transition: width 0.3s ease;
+        }
+        
+        .nav-link:hover::after {
+            width: 100%;
+        }
+        
+        .logo-text-auto {
+            color: white;
+        }
+        
+        .logo-text-aware {
+            color: #B94C4E;
+        }
+    </style>
+</head>
+<body class="font-sans text-gray-800 bg-gray-50">
+    <!-- Navigation -->
+    <nav class="fixed w-full bg-primary shadow-md z-50">
+        <div class="container mx-auto px-6 py-3 flex justify-between items-center">
+            <div class="flex items-center">
+                <span class="text-2xl font-bold">
+                    <span class="text-white">Auto</span><span class="text-accent">Aware</span>
+                </span>
+            </div>
+            
+            <div class="hidden md:flex items-center space-x-8">
+                <a href="#solutions" class="nav-link text-white hover:text-gray-200 font-medium">Solutions</a>
+                <a href="#benefits" class="nav-link text-white hover:text-gray-200 font-medium">Benefits</a>
+                <a href="#technology" class="nav-link text-white hover:text-gray-200 font-medium">Technology</a>
+                <a href="#contact" class="nav-link text-white hover:text-gray-200 font-medium">Contact</a>
+            </div>
+            
+            <div class="hidden md:block">
+                <a href="#contact" class="bg-white hover:bg-gray-100 text-primary font-medium py-2 px-6 rounded-full transition duration-300 ease-in-out transform hover:scale-105 inline-block">
+                    Get Started
+                </a>
+            </div>
+            
+            <div class="md:hidden flex items-center">
+                <button id="mobile-menu-button" class="text-white hover:text-gray-200 focus:outline-none">
+                    <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        
+        <!-- Mobile Menu -->
+        <div id="mobile-menu" class="md:hidden hidden bg-primary/95 border-t border-primary/20">
+            <a href="#solutions" class="block py-3 px-6 text-white hover:bg-primary/80">Solutions</a>
+            <a href="#benefits" class="block py-3 px-6 text-white hover:bg-primary/80">Benefits</a>
+            <a href="#technology" class="block py-3 px-6 text-white hover:bg-primary/80">Technology</a>
+            <a href="#contact" class="block py-3 px-6 text-white hover:bg-primary/80">Contact</a>
+            <div class="py-3 px-6">
+                <a href="#contact" class="w-full bg-white hover:bg-gray-100 text-primary font-medium py-2 px-6 rounded-full transition duration-300 ease-in-out inline-block text-center">
+                    Get Started
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <header class="pt-28 pb-20 md:pt-32 md:pb-24 gradient-bg">
+        <div class="container mx-auto px-6 flex flex-col md:flex-row items-center">
+            <div class="md:w-1/2 text-center md:text-left text-white mb-12 md:mb-0">
+                <h1 class="text-4xl md:text-5xl font-bold leading-tight mb-6">
+                    Transforming Transportation with Connected Vehicle Technology
+                </h1>
+                <p class="text-lg md:text-xl mb-8 opacity-90">
+                    Pioneering Vehicle-to-Everything (V2X) solutions for safer, smarter, and more sustainable mobility.
+                </p>
+                <div class="flex flex-col sm:flex-row justify-center md:justify-start space-y-4 sm:space-y-0 sm:space-x-4">
+                    <a href="#solutions" class="bg-white text-primary font-semibold py-3 px-8 rounded-full hover:bg-gray-100 transition duration-300 ease-in-out transform hover:scale-105 inline-block text-center">
+                        Explore Solutions
+                    </a>
+                    <a href="#contact" class="bg-transparent border-2 border-white text-white font-semibold py-3 px-8 rounded-full hover:bg-white/10 transition duration-300 ease-in-out transform hover:scale-105 inline-block text-center">
+                        Contact Us
+                    </a>
+                </div>
+            </div>
+            <div class="md:w-1/2 relative">
+                <div class="animate-float">
+                    <svg class="w-full h-auto" viewBox="0 0 600 400" xmlns="http://www.w3.org/2000/svg">
+                        <defs>
+                            <linearGradient id="road-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                                <stop offset="0%" style="stop-color:#333333;stop-opacity:1" />
+                                <stop offset="100%" style="stop-color:#555555;stop-opacity:1" />
+                            </linearGradient>
+                        </defs>
+                        <!-- Road -->
+                        <rect x="50" y="250" width="500" height="100" fill="url(#road-gradient)" rx="5" />
+                        <rect x="75" y="295" width="450" height="10" fill="#FFFFFF" />
+                        <rect x="75" y="295" width="50" height="10" fill="#FFFFFF" />
+                        <rect x="175" y="295" width="50" height="10" fill="#FFFFFF" />
+                        <rect x="275" y="295" width="50" height="10" fill="#FFFFFF" />
+                        <rect x="375" y="295" width="50" height="10" fill="#FFFFFF" />
+                        <rect x="475" y="295" width="50" height="10" fill="#FFFFFF" />
+                        
+                        <!-- Car 1 -->
+                        <rect x="150" y="260" width="80" height="30" fill="#230660" rx="8" />
+                        <circle cx="170" cy="290" r="10" fill="#333" />
+                        <circle cx="210" cy="290" r="10" fill="#333" />
+                        <rect x="155" y="265" width="70" height="15" fill="#FFFFFF" opacity="0.7" rx="3" />
+                        
+                        <!-- Car 2 -->
+                        <rect x="350" y="260" width="80" height="30" fill="#B94C4E" rx="8" />
+                        <circle cx="370" cy="290" r="10" fill="#333" />
+                        <circle cx="410" cy="290" r="10" fill="#333" />
+                        <rect x="355" y="265" width="70" height="15" fill="#FFFFFF" opacity="0.7" rx="3" />
+                        
+                        <!-- Traffic Light -->
+                        <rect x="100" y="150" width="20" height="100" fill="#555" />
+                        <rect x="90" y="150" width="40" height="60" fill="#333" rx="5" />
+                        <circle cx="110" cy="165" r="10" fill="#FF0000" />
+                        <circle cx="110" cy="190" r="10" fill="#FFFF00" />
+                        <circle cx="110" cy="215" r="10" fill="#00FF00" />
+                        
+                        <!-- Connection Lines -->
+                        <path d="M190 260 Q 200 200 110 180" stroke="#B94C4E" stroke-width="3" fill="none" stroke-dasharray="5,5" />
+                        <path d="M390 260 Q 380 200 110 180" stroke="#B94C4E" stroke-width="3" fill="none" stroke-dasharray="5,5" />
+                        <path d="M190 260 Q 270 230 390 260" stroke="#B94C4E" stroke-width="3" fill="none" stroke-dasharray="5,5" />
+                        
+                        <!-- Connection Dots -->
+                        <circle cx="190" cy="260" r="5" fill="#FFFFFF" />
+                        <circle cx="390" cy="260" r="5" fill="#FFFFFF" />
+                        <circle cx="110" cy="180" r="5" fill="#FFFFFF" />
+                        
+                        <!-- Signal Waves -->
+                        <circle cx="190" cy="260" r="15" fill="none" stroke="#FFFFFF" stroke-width="2" opacity="0.5">
+                            <animate attributeName="r" from="15" to="40" dur="2s" repeatCount="indefinite" />
+                            <animate attributeName="opacity" from="0.5" to="0" dur="2s" repeatCount="indefinite" />
+                        </circle>
+                        <circle cx="390" cy="260" r="15" fill="none" stroke="#FFFFFF" stroke-width="2" opacity="0.5">
+                            <animate attributeName="r" from="15" to="40" dur="2s" repeatCount="indefinite" />
+                            <animate attributeName="opacity" from="0.5" to="0" dur="2s" repeatCount="indefinite" />
+                        </circle>
+                        <circle cx="110" cy="180" r="15" fill="none" stroke="#FFFFFF" stroke-width="2" opacity="0.5">
+                            <animate attributeName="r" from="15" to="40" dur="2s" repeatCount="indefinite" />
+                            <animate attributeName="opacity" from="0.5" to="0" dur="2s" repeatCount="indefinite" />
+                        </circle>
+                    </svg>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Stats Section -->
+    <section class="py-12 bg-white">
+        <div class="container mx-auto px-6">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div class="text-center p-6 border-b-4 border-primary rounded-lg shadow-lg">
+                    <div class="text-4xl font-bold text-primary mb-2">94%</div>
+                    <p class="text-gray-600">Reduction in traffic-related accidents with V2X technology</p>
+                </div>
+                <div class="text-center p-6 border-b-4 border-secondary rounded-lg shadow-lg">
+                    <div class="text-4xl font-bold text-secondary mb-2">30%</div>
+                    <p class="text-gray-600">Improvement in traffic flow efficiency</p>
+                </div>
+                <div class="text-center p-6 border-b-4 border-accent rounded-lg shadow-lg">
+                    <div class="text-4xl font-bold text-accent mb-2">25%</div>
+                    <p class="text-gray-600">Reduction in carbon emissions through optimized routing</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Solutions Section -->
+    <section id="solutions" class="py-16 bg-gray-50">
+        <div class="container mx-auto px-6">
+            <div class="text-center mb-16">
+                <h2 class="text-3xl md:text-4xl font-bold text-gray-800 mb-4">Our V2X Solutions</h2>
+                <p class="text-xl text-gray-600 max-w-3xl mx-auto">
+                    Comprehensive connected vehicle technology that transforms transportation systems for a safer, more efficient future.
+                </p>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div class="bg-white rounded-xl shadow-lg overflow-hidden card-hover">
+                    <div class="h-3 bg-primary"></div>
+                    <div class="p-8">
+                        <div class="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mb-6">
+                            <svg class="w-8 h-8 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
+                            </svg>
+                        </div>
+                        <h3 class="text-xl font-bold text-gray-800 mb-3">Vehicle-to-Vehicle (V2V)</h3>
+                        <p class="text-gray-600 mb-6">
+                            Enable direct communication between vehicles to share critical safety information, prevent collisions, and enhance traffic flow.
+                        </p>
+                        <a href="#contact" class="text-primary font-medium flex items-center">
+                            Learn more
+                            <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                            </svg>
+                        </a>
+                    </div>
+                </div>
+                
+                <div class="bg-white rounded-xl shadow-lg overflow-hidden card-hover">
+                    <div class="h-3 bg-secondary"></div>
+                    <div class="p-8">
+                        <div class="w-16 h-16 bg-secondary/10 rounded-full flex items-center justify-center mb-6">
+                            <svg class="w-8 h-8 text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+                            </svg>
+                        </div>
+                        <h3 class="text-xl font-bold text-gray-800 mb-3">Vehicle-to-Infrastructure (V2I)</h3>
+                        <p class="text-gray-600 mb-6">
+                            Connect vehicles with traffic signals, road signs, and other infrastructure to optimize traffic management and reduce congestion.
+                        </p>
+                        <a href="#contact" class="text-secondary font-medium flex items-center">
+                            Learn more
+                            <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                            </svg>
+                        </a>
+                    </div>
+                </div>
+                
+                <div class="bg-white rounded-xl shadow-lg overflow-hidden card-hover">
+                    <div class="h-3 bg-accent"></div>
+                    <div class="p-8">
+                        <div class="w-16 h-16 bg-accent/10 rounded-full flex items-center justify-center mb-6">
+                            <svg class="w-8 h-8 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                        </div>
+                        <h3 class="text-xl font-bold text-gray-800 mb-3">Fleet Management Systems</h3>
+                        <p class="text-gray-600 mb-6">
+                            Comprehensive solutions for real-time tracking, predictive maintenance, and route optimization for commercial vehicle fleets.
+                        </p>
+                        <a href="#contact" class="text-accent font-medium flex items-center">
+                            Learn more
+                            <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                            </svg>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Benefits Section -->
+    <section id="benefits" class="py-16 bg-white">
+        <div class="container mx-auto px-6">
+            <div class="text-center mb-16">
+                <h2 class="text-3xl md:text-4xl font-bold text-gray-800 mb-4">Why Choose AutoAware</h2>
+                <p class="text-xl text-gray-600 max-w-3xl mx-auto">
+                    Our V2X solutions deliver tangible benefits that transform transportation systems and create value for all stakeholders.
+                </p>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-12">
+                <div class="flex">
+                    <div class="flex-shrink-0 mr-6">
+                        <div class="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center">
+                            <svg class="w-8 h-8 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+                            </svg>
+                        </div>
+                    </div>
+                    <div>
+                        <h3 class="text-xl font-bold text-gray-800 mb-3">Enhanced Safety</h3>
+                        <p class="text-gray-600">
+                            Reduce accidents through real-time hazard alerts, collision warnings, and emergency vehicle notifications that give drivers crucial seconds to react.
+                        </p>
+                    </div>
+                </div>
+                
+                <div class="flex">
+                    <div class="flex-shrink-0 mr-6">
+                        <div class="w-16 h-16 bg-secondary/10 rounded-full flex items-center justify-center">
+                            <svg class="w-8 h-8 text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                            </svg>
+                        </div>
+                    </div>
+                    <div>
+                        <h3 class="text-xl font-bold text-gray-800 mb-3">Improved Efficiency</h3>
+                        <p class="text-gray-600">
+                            Optimize traffic flow with intelligent routing, adaptive traffic signal control, and congestion management that reduces travel time and fuel consumption.
+                        </p>
+                    </div>
+                </div>
+                
+                <div class="flex">
+                    <div class="flex-shrink-0 mr-6">
+                        <div class="w-16 h-16 bg-accent/10 rounded-full flex items-center justify-center">
+                            <svg class="w-8 h-8 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3"></path>
+                            </svg>
+                        </div>
+                    </div>
+                    <div>
+                        <h3 class="text-xl font-bold text-gray-800 mb-3">Sustainability</h3>
+                        <p class="text-gray-600">
+                            Reduce emissions through optimized routing, less idling time, and smoother traffic flow that contributes to cleaner air and reduced environmental impact.
+                        </p>
+                    </div>
+                </div>
+                
+                <div class="flex">
+                    <div class="flex-shrink-0 mr-6">
+                        <div class="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center">
+                            <svg class="w-8 h-8 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                            </svg>
+                        </div>
+                    </div>
+                    <div>
+                        <h3 class="text-xl font-bold text-gray-800 mb-3">Data-Driven Insights</h3>
+                        <p class="text-gray-600">
+                            Leverage comprehensive analytics to make informed decisions about infrastructure investments, maintenance scheduling, and transportation planning.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Technology Section -->
+    <section id="technology" class="py-16 bg-gray-50">
+        <div class="container mx-auto px-6">
+            <div class="flex flex-col md:flex-row items-center">
+                <div class="md:w-1/2 mb-10 md:mb-0 md:pr-10">
+                    <h2 class="text-3xl md:text-4xl font-bold text-gray-800 mb-6">Our Technology Platform</h2>
+                    <p class="text-lg text-gray-600 mb-6">
+                        AutoAware's comprehensive V2X platform integrates cutting-edge hardware and software components to create a seamless communication ecosystem between vehicles, infrastructure, and other road users.
+                    </p>
+                    <ul class="space-y-4">
+                        <li class="flex items-start">
+                            <svg class="w-6 h-6 text-accent mr-3 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                            </svg>
+                            <span class="text-gray-700">Advanced onboard units with multi-protocol support (DSRC, C-V2X, 5G)</span>
+                        </li>
+                        <li class="flex items-start">
+                            <svg class="w-6 h-6 text-accent mr-3 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                            </svg>
+                            <span class="text-gray-700">Edge computing capabilities for real-time processing and decision-making</span>
+                        </li>
+                        <li class="flex items-start">
+                            <svg class="w-6 h-6 text-accent mr-3 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                            </svg>
+                            <span class="text-gray-700">Cloud-based analytics platform with machine learning capabilities</span>
+                        </li>
+                        <li class="flex items-start">
+                            <svg class="w-6 h-6 text-accent mr-3 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                            </svg>
+                            <span class="text-gray-700">End-to-end security with advanced encryption and authentication</span>
+                        </li>
+                    </ul>
+                    <a href="#contact" class="mt-8 bg-primary hover:bg-primary/90 text-white font-medium py-3 px-8 rounded-full transition duration-300 ease-in-out transform hover:scale-105 inline-block">
+                        Explore Our Technology
+                    </a>
+                </div>
+                <div class="md:w-1/2">
+                    <div class="bg-white p-6 rounded-xl shadow-lg">
+                        <svg class="w-full h-auto" viewBox="0 0 500 400" xmlns="http://www.w3.org/2000/svg">
+                            <!-- City Background -->
+                            <rect x="0" y="0" width="500" height="400" fill="#f8fafc" />
+                            
+                            <!-- Buildings -->
+                            <rect x="50" y="100" width="80" height="200" fill="#e2e8f0" />
+                            <rect x="60" y="120" width="15" height="15" fill="#94a3b8" />
+                            <rect x="85" y="120" width="15" height="15" fill="#94a3b8" />
+                            <rect x="60" y="145" width="15" height="15" fill="#94a3b8" />
+                            <rect x="85" y="145" width="15" height="15" fill="#94a3b8" />
+                            <rect x="60" y="170" width="15" height="15" fill="#94a3b8" />
+                            <rect x="85" y="170" width="15" height="15" fill="#94a3b8" />
+                            
+                            <rect x="150" y="150" width="100" height="150" fill="#cbd5e1" />
+                            <rect x="165" y="170" width="20" height="20" fill="#94a3b8" />
+                            <rect x="195" y="170" width="20" height="20" fill="#94a3b8" />
+                            <rect x="225" y="170" width="20" height="20" fill="#94a3b8" />
+                            <rect x="165" y="200" width="20" height="20" fill="#94a3b8" />
+                            <rect x="195" y="200" width="20" height="20" fill="#94a3b8" />
+                            <rect x="225" y="200" width="20" height="20" fill="#94a3b8" />
+                            <rect x="165" y="230" width="20" height="20" fill="#94a3b8" />
+                            <rect x="195" y="230" width="20" height="20" fill="#94a3b8" />
+                            <rect x="225" y="230" width="20" height="20" fill="#94a3b8" />
+                            
+                            <rect x="280" y="120" width="70" height="180" fill="#e2e8f0" />
+                            <rect x="290" y="140" width="15" height="15" fill="#94a3b8" />
+                            <rect x="315" y="140" width="15" height="15" fill="#94a3b8" />
+                            <rect x="290" y="165" width="15" height="15" fill="#94a3b8" />
+                            <rect x="315" y="165" width="15" height="15" fill="#94a3b8" />
+                            <rect x="290" y="190" width="15" height="15" fill="#94a3b8" />
+                            <rect x="315" y="190" width="15" height="15" fill="#94a3b8" />
+                            <rect x="290" y="215" width="15" height="15" fill="#94a3b8" />
+                            <rect x="315" y="215" width="15" height="15" fill="#94a3b8" />
+                            
+                            <rect x="370" y="170" width="90" height="130" fill="#cbd5e1" />
+                            <rect x="385" y="190" width="20" height="20" fill="#94a3b8" />
+                            <rect x="415" y="190" width="20" height="20" fill="#94a3b8" />
+                            <rect x="385" y="220" width="20" height="20" fill="#94a3b8" />
+                            <rect x="415" y="220" width="20" height="20" fill="#94a3b8" />
+                            <rect x="385" y="250" width="20" height="20" fill="#94a3b8" />
+                            <rect x="415" y="250" width="20" height="20" fill="#94a3b8" />
+                            
+                            <!-- Road -->
+                            <rect x="0" y="300" width="500" height="60" fill="#475569" />
+                            <rect x="20" y="328" width="40" height="4" fill="#f8fafc" />
+                            <rect x="80" y="328" width="40" height="4" fill="#f8fafc" />
+                            <rect x="140" y="328" width="40" height="4" fill="#f8fafc" />
+                            <rect x="200" y="328" width="40" height="4" fill="#f8fafc" />
+                            <rect x="260" y="328" width="40" height="4" fill="#f8fafc" />
+                            <rect x="320" y="328" width="40" height="4" fillু="#f8fafc" />
+                            <rect x="380" y="328" width="40" height="4" fill="#f8fafc" />
+                            <rect x="440" y="328" width="40" height="4" fill="#f8fafc" />
+                            
+                            <!-- Traffic Light -->
+                            <rect x="350" y="240" width="10" height="60" fill="#334155" />
+                            <rect x="340" y="240" width="30" height="40" fill="#1e293b" rx="3" />
+                            <circle cx="355" cy="250" r="7" fill="#ef4444" />
+                            <circle cx="355" cy="270" r="7" fill="#22c55e" />
+                            
+                            <!-- Cars -->
+                            <rect x="100" y="310" width="50" height="25" fill="#230660" rx="5" />
+                            <circle cx="110" cy="335" r="8" fill="#1e293b" />
+                            <circle cx="140" cy="335" r="8" fill="#1e293b" />
+                            <rect x="105" y="315" width="40" height="10" fill="#bfdbfe" rx="2" />
+                            
+                            <rect x="200" y="310" width="50" height="25" fill="#4A2A91" rx="5" />
+                            <circle cx="210" cy="335" r="8" fill="#1e293b" />
+                            <circle cx="240" cy="335" r="8" fill="#1e293b" />
+                            <rect x="205" y="315" width="40" height="10" fill="#bfdbfe" rx="2" />
+                            
+                            <rect x="400" y="310" width="50" height="25" fill="#B94C4E" rx="5" />
+                            <circle cx="410" cy="335" r="8" fill="#1e293b" />
+                            <circle cx="440" cy="335" r="8" fill="#1e293b" />
+                            <rect x="405" y="315" width="40" height="10" fill="#bfdbfe" rx="2" />
+                            
+                            <!-- Connection Lines -->
+                            <path d="M125 310 Q 175 250 355 250" stroke="#B94C4E" stroke-width="2" fill="none" stroke-dasharray="4,4" />
+                            <path d="M225 310 Q 275 270 355 270" stroke="#B94C4E" stroke-width="2" fill="none" stroke-dasharray="4,4" />
+                            <path d="M425 310 Q 375 280 355 260" stroke="#B94C4E" stroke-width="2" fill="none" stroke-dasharray="4,4" />
+                            <path d="M125 310 Q 175 290 225 310" stroke="#B94C4E" stroke-width="2" fill="none" stroke-dasharray="4,4" />
+                            <path d="M225 310 Q 325 290 425 310" stroke="#B94C4E" stroke-width="2" fill="none" stroke-dasharray="4,4" />
+                            
+                            <!-- Connection Points -->
+                            <circle cx="125" cy="310" r="4" fill="#ffffff" />
+                            <circle cx="225" cy="310" r="4" fill="#ffffff" />
+                            <circle cx="425" cy="310" r="4" fill="#ffffff" />
+                            <circle cx="355" cy="250" r="4" fill="#ffffff" />
+                            <circle cx="355" cy="270" r="4" fill="#ffffff" />
+                            
+                            <!-- Signal Waves -->
+                            <circle cx="225" cy="310" r="10" fill="none" stroke="#B94C4E" stroke-width="1.5" opacity="0.7">
+                                <animate attributeName="r" from="10" to="30" dur="2s" repeatCount="indefinite" />
+                                <animate attributeName="opacity" from="0.7" to="0" dur="2s" repeatCount="indefinite" />
+                            </circle>
+                            <circle cx="355" cy="260" r="10" fill="none" stroke="#B94C4E" stroke-width="1.5" opacity="0.7">
+                                <animate attributeName="r" from="10" to="30" dur="2s" repeatCount="indefinite" />
+                                <animate attributeName="opacity" from="0.7" to="0" dur="2s" repeatCount="indefinite" />
+                            </circle>
+                            
+                            <!-- Cloud Platform -->
+                            <ellipse cx="250" cy="80" rx="70" ry="30" fill="#e0f2fe" stroke="#230660" stroke-width="2" />
+                            <text x="250" y="85" font-family="Arial" font-size="12" text-anchor="middle" fill="#230660">Cloud Platform</text>
+                            
+                            <!-- Cloud Connections -->
+                            <path d="M125 310 Q 150 150 250 80" stroke="#230660" stroke-width="2" fill="none" stroke-dasharray="4,4" />
+                            <path d="M225 310 Q 240 150 250 80" stroke="#230660" stroke-width="2" fill="none" stroke-dasharray="4,4" />
+                            <path d="M425 310 Q 350 150 250 80" stroke="#230660" stroke-width="2" fill="none" stroke-dasharray="4,4" />
+                            <path d="M355 250 Q 300 150 250 80" stroke="#230660" stroke-width="2" fill="none" stroke-dasharray="4,4" />
+                        </svg>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="py-16 gradient-bg">
+        <div class="container mx-auto px-6 text-center">
+            <h2 class="text-3xl md:text-4xl font-bold text-white mb-6">Ready to Transform Your Transportation Systems?</h2>
+            <p class="text-xl text-white/90 mb-10 max-w-3xl mx-auto">
+                Join the growing network of organizations leveraging AutoAware's V2X solutions to create safer, more efficient, and sustainable transportation ecosystems.
+            </p>
+            <div class="flex flex-col sm:flex-row justify-center space-y-4 sm:space-y-0 sm:space-x-6">
+                <a href="#contact" class="bg-white text-primary font-semibold py-3 px-8 rounded-full hover:bg-gray-100 transition duration-300 ease-in-out transform hover:scale-105 inline-block text-center">
+                    Request a Demo
+                </a>
+                <a href="#contact" class="bg-transparent border-2 border-white text-white font-semibold py-3 px-8 rounded-full hover:bg-white/10 transition duration-300 ease-in-out transform hover:scale-105 inline-block text-center">
+                    Contact Sales
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Contact Section -->
+    <section id="contact" class="py-16 bg-white">
+        <div class="container mx-auto px-6">
+            <div class="text-center mb-16">
+                <h2 class="text-3xl md:text-4xl font-bold text-gray-800 mb-4">Get in Touch</h2>
+                <p class="text-xl text-gray-600 max-w-3xl mx-auto">
+                    Have questions about our V2X solutions? Our team of experts is ready to help you navigate the future of connected transportation.
+                </p>
+            </div>
+            
+            <div class="flex flex-col md:flex-row">
+                <div class="md:w-1/2 md:pr-8 mb-10 md:mb-0">
+                    <form id="contactForm" class="space-y-6">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label for="name" class="block text-gray-700 font-medium mb-2">Full Name</label>
+                                <input type="text" id="name" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent" placeholder="John Doe" required>
+                            </div>
+                            <div>
+                                <label for="email" class="block text-gray-700 font-medium mb-2">Email Address</label>
+                                <input type="email" id="email" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent" placeholder="john@example.com" required>
+                            </div>
+                        </div>
+                        <div>
+                            <label for="company" class="block text-gray-700 font-medium mb-2">Company</label>
+                            <input type="text" id="company" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent" placeholder="Your Company">
+                        </div>
+                        <div>
+                            <label for="message" class="block text-gray-700 font-medium mb-2">Message</label>
+                            <textarea id="message" rows="5" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent" placeholder="How can we help you?" required></textarea>
+                        </div>
+                        <div>
+                            <button type="submit" class="w-full bg-primary hover:bg-primary/90 text-white font-medium py-3 px-6 rounded-lg transition duration-300 ease-in-out">
+                                Send Message
+                            </button>
+                        </div>
+                        <div id="formResponse" class="hidden mt-4 p-4 rounded-lg"></div>
+                    </form>
+                </div>
+                <div class="md:w-1/2 md:pl-8">
+                    <div class="bg-gray-50 p-8 rounded-xl h-full">
+                        <h3 class="text-2xl font-bold text-gray-800 mb-6">Contact Information</h3>
+                        <div class="space-y-6">
+                            <div class="flex items-start">
+                                <div class="flex-shrink-0 mt-1">
+                                    <svg class="w-6 h-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                    </svg>
+                                </div>
+                                <div class="ml-4">
+                                    <h4 class="text-lg font-semibold text-gray-800">Address</h4>
+                                    <p class="text-gray-600 mt-1">National Incubation Center, 24-B Street 6,<br>Sector H-9/1 H 9/1 H-9, Islamabad, 44000</p>
+                                </div>
+                            </div>
+                            <div class="flex items-start">
+                                <div class="flex-shrink-0 mt-1">
+                                    <svg class="w-6 h-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+                                    </svg>
+                                </div>
+                                <div class="ml-4">
+                                    <h4 class="text-lg font-semibold text-gray-800">Email</h4>
+                                    <p class="text-gray-600 mt-1">info@autoawareai.com</p>
+                                </div>
+                            </div>
+                            <div class="flex items-start">
+                                <div class="flex-shrink-0 mt-1">
+                                    <svg class="w-6 h-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                    </svg>
+                                </div>
+                                <div class="ml-4">
+                                    <h4 class="text-lg font-semibold text-gray-800">Business Hours</h4>
+                                    <p class="text-gray-600 mt-1">Monday - Friday: 9:00 AM - 6:00 PM<br>Saturday - Sunday: Closed</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mt-8">
+                            <h4 class="text-lg font-semibold text-gray-800 mb-4">Connect With Us</h4>
+                            <div class="flex">
+                                <a href="https://www.linkedin.com/company/autoaware/" target="_blank" class="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary hover:bg-primary hover:text-white transition duration-300">
+                                    <i class="fab fa-linkedin-in"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-dark text-white py-12">
+        <div class="container mx-auto px-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-12">
+                <div>
+                    <div class="flex items-center mb-6">
+                        <span class="text-xl font-bold">
+                            <span class="text-white">Auto</span><span class="text-accent">Aware</span>
+                        </span>
+                    </div>
+                    <p class="text-gray-400 mb-6">
+                        Transforming transportation through connected vehicle technology and V2X solutions.
+                    </p>
+                    <div class="flex">
+                        <a href="https://www.linkedin.com/company/autoaware/" target="_blank" class="text-gray-400 hover:text-white transition duration-300">
+                            <i class="fab fa-linkedin-in"></i>
+                        </a>
+                    </div>
+                    </div>
+                <div>
+                    <h3 class="text-lg font-semibold mb-6">Solutions</h3>
+                    <ul class="space-y-3">
+                        <li><a href="#solutions" class="text-gray-400 hover:text-white transition duration-300">Vehicle-to-Vehicle (V2V)</a></li>
+                        <li><a href="#solutions" class="text-gray-400 hover:text-white transition duration-300">Vehicle-to-Infrastructure (V2I)</a></li>
+                        <li><a href="#solutions" class="text-gray-400 hover:text-white transition duration-300">Fleet Management</a></li>
+                        <li><a href="#solutions" class="text-gray-400 hover:text-white transition duration-300">Smart City Integration</a></li>
+                        <li><a href="#solutions" class="text-gray-400 hover:text-white transition duration-300">Traffic Optimization</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="mt-12 pt-8 text-center">
+                <p class="text-gray-400 text-sm">
+                    © 2025 AutoAware. All rights reserved.
+                </p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Mobile menu toggle
+        const mobileMenuButton = document.getElementById('mobile-menu-button');
+        const mobileMenu = document.getElementById('mobile-menu');
+        
+        mobileMenuButton.addEventListener('click', () => {
+            mobileMenu.classList.toggle('hidden');
+        });
+        
+        // Smooth scrolling for anchor links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function(e) {
+                e.preventDefault();
+                
+                const targetId = this.getAttribute('href');
+                const targetElement = document.querySelector(targetId);
+                
+                if (targetElement) {
+                    window.scrollTo({
+                        top: targetElement.offsetTop - 80,
+                        behavior: 'smooth'
+                    });
+                    
+                    // Close mobile menu if open
+                    if (!mobileMenu.classList.contains('hidden')) {
+                        mobileMenu.classList.add('hidden');
+                    }
+                }
+            });
+        });
+        
+        // Form submission with success message
+        const contactForm = document.getElementById('contactForm');
+        const formResponse = document.getElementById('formResponse');
+        
+        if (contactForm) {
+            contactForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                // Show success message
+                formResponse.textContent = 'Your form is submitted. Our team will contact you soon.';
+                formResponse.classList.remove('hidden', 'bg-red-100', 'text-red-700');
+                formResponse.classList.add('bg-green-100', 'text-green-700');
+                formResponse.style.display = 'block';
+                
+                // Reset form
+                contactForm.reset();
+                
+                // Scroll to response message
+                formResponse.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                
+                // Hide message after 5 seconds
+                setTimeout(() => {
+                    formResponse.classList.add('hidden');
+                }, 5000);
+            });
+        }
+    </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9500eba6015c5f96',t:'MTc0OTk3ODQ4MS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
